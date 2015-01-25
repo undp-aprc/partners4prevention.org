@@ -1,0 +1,89 @@
+<?php
+  function odhook_menu() {
+    $items['hook/form'] = array(
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('nat_form'),
+      'access callback' => TRUE,
+    ); 
+
+    $items['cookie/accept'] = array(
+      'page callback' => 'parse_cookie',
+      'page arguments' => array(),
+      'access callback' => TRUE,
+    ); 
+    
+    return $items;
+  } 
+  
+  function parse_cookie() {
+    $form = $_POST;
+    $node = new stdClass();
+    $node->type = 'submitted_popup'; 
+    $node->field_name['und'][0]['value']    = $form['name'];
+    $node->field_surname['und'][0]['value'] = $form['surname'];
+    $node->field_email['und'][0]['value']   = $form['email'];
+    $node->field_referenced_nid['und'][0]['value']   = $form['referenced_nid'];
+
+    node_save($node);
+    return drupal_json_output($node);
+  }
+
+  function odhook_node_view($node, $view_mode, $langcode) {
+    if (isset($node->field_resource_file)) {
+      $str = drupal_render(drupal_get_form('nat_form'));
+      drupal_add_js(array('odhook' => array('form' => $str)), 'setting');
+      drupal_add_js(array('odhook' => array('nid' => arg(1))), 'setting');
+      drupal_add_js(drupal_get_path('module', 'odhook') .'/js/jquery.colorbox.js', 'file');
+      drupal_add_js(drupal_get_path('module', 'odhook') .'/js/hook_on_link.js', 'file');
+      drupal_add_css(drupal_get_path('module', 'odhook') .'/css/colorbox.css', 'file');
+    }
+  }
+
+  // hook_form implementation
+  function nat_form($node, &$form_state) {
+      $form = array();
+
+      $form['name'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Name'),
+          '#description' => t('You can type anything you like.'),
+      );
+
+      $form['surname'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Surname'),
+          //'#description' => t('You can type anything you like.'),
+      );
+
+      $form['email'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Email'),
+          //'#description' => t('You can type anything you like.'),
+      );
+
+      $form['referenced_nid'] = array(
+          '#type' => 'textfield',
+          '#title' => 'ref nid',
+          '#value' => arg(1)
+      );
+
+      $form['submit'] = array(
+          '#type' => 'submit',
+          '#value' => t('Submit'),
+          '#submit' => array('popup_submit')
+      );
+      return $form;
+  }
+
+  function popup_submit(&$form, &$form_state){
+    $node = new stdClass();
+    $node->type = 'submitted_popup';
+
+    $node->field_name['und'][0]['value']    = $form['name']['#value'];
+    $node->field_surname['und'][0]['value'] = $form['surname']['#value'];
+    $node->field_email['und'][0]['value']   = $form['email']['#value'];
+    $node->field_referenced_nid['und'][0]['value']   = $form['referenced_nid']['#value'];
+
+    node_save($node);
+    drupal_set_message("SAVED");
+  } 

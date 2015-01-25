@@ -1,0 +1,180 @@
+<?php
+
+define('FEEDBACK_POPUP_NODE_TYPE', 'feedback', TRUE);
+
+/**
+ * Implements hook_permission().
+ */
+function feedback_popup_permission() {
+  return array(
+    'administer feedback popup' => array(
+      'title' => t('Administer Feedback Popup'),
+      'description' => t('Perform administration task for feedback popup module'),
+    ),
+    'access feedback popup' => array(
+      'title' => t('Access Feedback Popup'),
+      'description' => t('Access feedback popup form.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function feedback_popup_menu() {
+  $items = array();
+  
+  $items['admin/config/content/feedback_popup'] = array(
+    'title' => 'Feedback Popup',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('feedback_popup_admin'),
+    'access arguments' => array('administer feedback popup'),
+    'file' => 'includes/feedback_popup.admin.inc',
+  );
+
+/*
+  $items['feedback_popup/form/post'] = array(
+    'page callback' => 'feedback_popup_save_from_cookie',
+    'access arguments' => array('access content'),
+  ); 
+*/
+
+  $items['feedback_popup/thankyou'] = array(
+    'title' => t('Thank you'),
+    'page callback' => 'feedback_popup_thank_you',
+    'access arguments' => array('access content'),
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_init().
+ **/
+function feedback_popup_init() {
+  $alias = drupal_get_path_alias();
+  if ($alias === 'resource' || strpos($alias, 'resource/') !== FALSE) {
+    //drupal_add_library('system', 'jquery.cookie');
+    drupal_add_js(drupal_get_path('module', 'feedback_popup') .'/js/jquery.colorbox-min.js', 'file');
+    drupal_add_js(drupal_get_path('module', 'feedback_popup') .'/js/feedback_popup.js', 'file');
+    drupal_add_css(drupal_get_path('module','feedback_popup') .'/css/colorbox.css', 'file'); 
+    drupal_add_js(array('feedback_form' => array('enabled' => variable_get('feedback_popup_enabled', false))), 'setting');
+  }
+}
+
+/**
+ * Implements hook_node_view().
+ */
+function feedback_popup_node_view($node, $view_mode, $langcode) {
+  if ($node->type == 'resource') {
+    /**
+     * Set file data for render additional attributes.
+     * @see genesis_p4p_file_link().
+     */
+    $file = &$node->content['field_resource_file'][0]['#file'];
+    $file->feedback_popup = TRUE;
+    $file->resource_nid = $node->nid;
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function feedback_popup_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id == 'feedback_node_form') {
+    if (empty($form['nid']['#value'])) {
+      $form['actions']['submit']['#value'] = t('Submit');
+      $form['actions']['submit']['#submit'][] = 'feedback_popup_node_form_submit';
+    }
+  }
+}
+
+/**
+ * Feedback node form submit.
+ */
+function feedback_popup_node_form_submit(&$form, &$form_state) {
+  drupal_get_messages();
+  $form_state['redirect'] = 'feedback_popup/thankyou';
+
+  $values = $form_state['values'];
+  $organization = field_get_items('node', (object) $values, 'field_organization');
+  $country = field_get_items('node', (object) $values, 'field_country');
+  $reason = field_get_items('node', (object) $values, 'field_reason');
+
+  $form_data = array(
+    'organization' => $organization[0]['value'],
+    'country' => $country[0]['value'],
+    'reason' => $reason[0]['value'],
+  );
+
+  //$timeout = variable_get('feedback_popup_cookie_timeout', 365) * 60 * 60 * 24;
+  //$timeout = time() + $timeout;
+  //setcookie('feedback-form', drupal_json_encode($form_data), $timeout, '/');
+  //setcookie('feedback-remember', 'remember', $timeout, '/');
+}
+
+/**
+ * Implements hook_custom_theme().
+ */
+function feedback_popup_custom_theme() {
+  if (drupal_get_path_alias() == 'feedback_popup/thankyou') {
+    return 'seven';
+  }
+}
+
+/**
+ * Save data from cookie.
+ */
+/*
+function feedback_popup_save_from_cookie() {
+  global $language;
+
+  $json = array('status' => TRUE);
+
+  if ($_COOKIE['feedback-form'] && $_COOKIE['feedback-remember'] == 'remember' && isset($_POST['resource']) && is_numeric($_POST['resource'])) {
+    $target_id = $_POST['resource'];
+
+    $threshold = variable_get('feedback_popup_threshold', 15) * 60;
+    $sql = "SELECT n.created, ip.ip FROM {node} n LEFT JOIN {ip_posts} ip ON ip.id = n.nid WHERE ip.type = 'node' AND n.type = 'feedback' AND n.created > :created AND ip.ip = :ip ORDER BY n.created DESC";
+    $result = db_query($sql, array(
+      ':created' => REQUEST_TIME - $threshold,
+      ':ip' => ip2long(ip_address()),
+    ));
+    $json['count'] = $result->rowCount();
+
+    // Can create new feedback.
+    if ($result->rowCount() == 0) {
+      $form = drupal_json_decode($_COOKIE['feedback-form']);
+      // Validate form data.
+      if (isset($form['organization']) && isset($form['country']) && isset($form['reason'])) {
+        $node = new stdClass();
+        $node->type = 'feedback';
+        node_object_prepare($node);
+
+        $node->field_organization['und'][0]['value'] = $form['organization'];
+        $node->field_country['und'][0]['value'] = $form['country'];
+        $node->field_reason['und'][0]['email'] = $form['reason'];
+        $node->field_fb_resource['und'][0]['target_id'] = $target_id;
+        $node->language = $language->language;
+
+        node_save($node);
+      }
+      else {
+        $json['status'] = FALSE;
+      }
+    }
+  }
+  else {
+    $json['status'] = FALSE;
+  }
+  drupal_json_output($json);
+}
+
+*/
+
+/**
+ * Thank you message.
+ */
+function feedback_popup_thank_you() {
+  return t(variable_get('feedback_popup_message', 'Please change message before using.'));
+}

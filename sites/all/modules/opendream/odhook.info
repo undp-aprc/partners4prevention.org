@@ -1,0 +1,7 @@
+; $Id$
+name = Opendram Hook
+description = "just another opendream hook"
+version = 0.1
+core = 7.x
+package = Opendream
+

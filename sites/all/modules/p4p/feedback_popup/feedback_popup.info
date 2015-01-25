@@ -1,0 +1,8 @@
+name = Feedback Popup
+description = Provide feedback popup form when do some actions with jQuery selector.
+core = 7.x
+
+dependencies[] = entityreference
+dependencies[] = entityreference_prepopulate
+dependencies[] = email
+dependencies[] = ip

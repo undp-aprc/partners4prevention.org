@@ -1,0 +1,96 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function hooker_menu() {
+  $items['hooker/test'] = array(
+    'title' => 'Test',
+    'page callback' => 'hooker_test',
+    'access arguments' => array('administer site configuration'),
+  );
+  return $items;
+}
+
+function hooker_test() {
+  $field_name = 'field_fb_resource';
+  $field = field_info_field($field_name);
+  $instance = field_info_instance('node', $field_name, 'feedback');
+dpm($field);
+dpm($instance);
+  return 'xxx';
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function hooker_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id == 'views_exposed_form') {
+    $classes = $form_state['display']->display_options['css_class'];
+    $classes = explode(' ', $classes);
+    if (array_search('top-exposed', $classes) !== FALSE) {
+      if (isset($form['field_category_value'])) {
+        $label = &$form['#info']['filter-field_category_value']['label'];
+        $form['field_category_value']['#options']['All'] = "- $label -";
+        $label = '';
+      }
+      if (isset($form['field_type_value'])) {
+        $label = &$form['#info']['filter-field_type_value']['label'];
+        $form['field_type_value']['#options']['All'] = "- $label -";
+        $label = '';
+      }
+      if (isset($form['populate'])) {
+        $label = &$form['#info']['filter-populate']['label'];
+        $form['populate']['#attributes']['placeholder'] = $label;
+        $label = '';
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_node_view_alter().
+ */
+function hooker_node_view_alter(&$build) {
+  if ($build['#view_mode'] == 'teaser' && $build['#node']->type == 'document_block') {
+    $build['title_field']['#markup'] = '<h4 class="document-title">'. $build['#node']->title .'</h4>';
+    $build['title_field']['#weight'] = $build['field_resource_image']['#weight'] + 0.5;
+  }
+}
+
+/**
+ * Implements hook_menu_block_tree_alter().
+ */
+function hooker_menu_block_tree_alter(&$tree, $config) {
+  // Handle menu active on node resource page.
+  if ($config['delta'] == 4 && arg(0) == 'node' && is_numeric(arg(1))) {
+    $node = node_load(arg(1));
+    if ($node->type == 'resource') {
+      $items = array();
+      _hooker_flat_menu_items($tree, $items);
+      $category = field_get_items('node', $node, 'field_category');
+      $category = $category[0]['value'];
+      foreach ($items as $mlid => &$link) {
+        $alias = drupal_get_path_alias($link['link_path']);
+        $alias = explode('/', $alias);
+        if ($alias[0] == 'resource' && count($alias) > 1) {
+          $current_category = $alias[1];
+          $current_category = str_replace('-', ' ', $current_category);
+          if (strtolower($current_category) === strtolower($category)) {
+            $link['localized_options']['attributes']['class'] = array('active', 'active-trail');
+          }
+          break;
+        }
+      }
+    }
+  }
+}
+
+function _hooker_flat_menu_items($tree, &$items) {
+  foreach ($tree as $name => $item) {
+    $items[$item['link']['mlid']] = &$item['link'];
+    if ($item['below']) {
+      _hooker_flat_menu_items($item['below'], $items);
+    }
+  }
+}

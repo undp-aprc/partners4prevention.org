@@ -1,0 +1,13 @@
+diff --git a/emfield.module b/emfield.module
+index b230f61..cba843a 100644
+--- a/emfield.module
++++ b/emfield.module
+@@ -5,7 +5,7 @@
+  */
+ function emfield_field_widget_info() {
+   return array(
+-    'enfield_widget' => array(
++    'emfield_widget' => array(
+       'label' => t('Embedded media field'),
+       'field types' => array('file'),
+       'settings' => array('size' => 60),

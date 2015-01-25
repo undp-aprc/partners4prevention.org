@@ -1,0 +1,164 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */
+function feedback_popup_install() {
+  _feedback_popup_install_node_type();
+}
+
+/**
+ * Installing node type.
+ */
+function _feedback_popup_install_node_type() {
+  $type = node_type_get_type(_feedback_popup_get_node_type());
+  if (!$type) {
+    $type = node_type_set_defaults(array(
+      'type' => _feedback_popup_get_node_type(),
+      'name' => t('Feedback'),
+      'base' => 'node_content',
+      'description' => t('A feedback information from user.'),
+      'locked' => FALSE,
+      'custom' => TRUE,
+      'modified' => TRUE,
+      'has_title' => FALSE,
+    ));
+    node_type_save($type);
+    //node_add_body_field($type);
+
+    foreach (_feedback_popup_installed_fields() as $field_name => $data) {
+      $field = field_info_field($field_name);
+      $instance = field_info_instance('node', $field_name, $type->type);
+      if (empty($field)) {
+        $data['field']['field_name'] = $field_name;
+        field_create_field($data['field']);
+      }
+      if (empty($instance)) {
+        $data['instance']['field_name'] = $field_name;
+        $data['instance']['bundle'] = $type->type;
+        field_create_instance($data['instance']);
+      }
+    }
+  }
+}
+
+/**
+ * Return a structured array defining the fields created by this content type.
+ * Fields:
+ * - field_fb_first_name
+ * - field_fb_last_name
+ * - field_fb_email
+ * - field_fb_resource
+ */
+function _feedback_popup_installed_fields() {
+  $t = get_t();
+  $fields = array();
+
+  // First name
+  $fields['field_fb_first_name'] = array(
+    'field' => array(
+      'type' => 'text',
+      'module' => 'text',
+      'settings' => array('max_length' => 255),
+    ),
+    'instance' => array(
+      'label' => 'First name',
+      'required' => TRUE,
+      'entity_type' => 'node',
+      'widget' => array(
+        'type' => 'text_textfield',
+        'module' => 'text',
+        'settings' => array('size' => 60),
+      ),
+      'settings' => array('text_processing' => 0),
+    ),
+  );
+  // Last name
+  $fields['field_fb_last_name'] = array(
+    'field' => array(
+      'type' => 'text',
+      'module' => 'text',
+      'settings' => array('max_length' => 255),
+    ),
+    'instance' => array(
+      'label' => 'Last name',
+      'required' => TRUE,
+      'entity_type' => 'node',
+      'widget' => array(
+        'type' => 'text_textfield',
+        'module' => 'text',
+        'settings' => array('size' => 60),
+      ),
+      'settings' => array('text_processing' => 0),
+    ),
+  );
+  // Email
+  $fields['field_fb_email'] = array(
+    'field' => array(
+      'type' => 'email',
+      'module' => 'email',
+    ),
+    'instance' => array(
+      'label' => 'Email',
+      'required' => TRUE,
+      'entity_type' => 'node',
+      'widget' => array(
+        'type' => 'email_textfield',
+        'module' => 'email',
+        'settings' => array('size' => 60),
+      ),
+      'settings' => array(),
+    ),
+  );
+  // Resource reference
+  $fields['field_fb_resource'] = array(
+    'field' => array(
+      'settings' => array(
+        'target' => 'node',
+        'handler' => 'base',
+        'handler_settings' => array(
+          'target_bundles' => array('resource' => 'resource'),
+          'sort' => array(
+            'type' => 'property',
+            'property' => 'created',
+            'direction' => 'DESC',
+          ),
+        ),
+      ),
+      'type' => 'entityreference',
+      'module' => 'entityreference',
+    ),
+    'instance' => array(
+      'label' => 'Resource',
+      'required' => TRUE,
+      'entity_type' => 'node',
+      'widget' => array(
+        'type' => 'entityreference_autocomplete',
+        'module' => 'entityreference',
+        'settings' => array(
+          'match_operator' => 'CONTAINS',
+          'size' => 60,
+          'path' => '',
+        ),
+      ),
+      'settings' => array(
+        'behaviors' => array(
+          'prepopulate' => array(
+            'status' => 1,
+            'action' => 'hide',
+            'action_on_edit' => FALSE,
+            'fallback' => 'none',
+            'skip_perm' => FALSE,
+            'og_context' => FALSE,
+          ),
+        ),
+      ),
+      'default_value_function' => 'entityreference_prepopulate_field_default_value',
+    ),
+  );
+  return $fields;
+}
+
+function _feedback_popup_get_node_type() {
+  return 'feedback';
+}

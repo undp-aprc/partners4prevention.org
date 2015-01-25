@@ -1,0 +1,3 @@
+name = P4P Hooker
+description = Implements many hooks.
+core = 7.x
