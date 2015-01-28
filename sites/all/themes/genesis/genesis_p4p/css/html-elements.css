@@ -27,11 +27,11 @@
  */
 
 html {
-  font-size: 13px;
+  font-size: 16px;
 }
 
 body {
-  font-family: Helvertica,Arial, Geneva, "DejaVu Sans", sans-serif;
+  font-family:'Source Sans Pro', sans-serif;
   line-height: 1.5;
 }
 

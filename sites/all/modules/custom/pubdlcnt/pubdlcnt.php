@@ -31,9 +31,9 @@ $current_dir = getcwd();
 
 // we need to change the current directory to the (drupal-root) directory
 // in order to include some necessary files.
-if (file_exists('../../../../../includes/bootstrap.inc')) {
+if (file_exists('../../../../includes/bootstrap.inc')) {
   // If this script is in the (drupal-root)/sites/(site)/modules/pubdlcnt directory
-  chdir('../../../../../'); // go to drupal root
+  chdir('../../../../'); // go to drupal root
 }
 else if (file_exists('../../includes/bootstrap.inc')) {
   // If this script is in the (drupal-root)/modules/pubdlcnt directory

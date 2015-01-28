@@ -23,10 +23,20 @@ function genesis_SUBTHEME_process(&$vars, $hook) {
 /**
  * Override or insert variables into the html templates.
  */
-/* -- Delete this line if you want to use these functions
-function genesis_SUBTHEME_preprocess_html(&$vars) {
+
+function genesis_p4p_preprocess_html(&$variables) {
   // Uncomment the folowing line to add a conditional stylesheet for IE 7 or less.
   // drupal_add_css(path_to_theme() . '/css/ie/ie-lte-7.css', array('weight' => CSS_THEME, 'browsers' => array('IE' => 'lte IE 7', '!IE' => FALSE), 'preprocess' => FALSE));
+  
+  $element = array(
+    '#tag' => 'link', // The #tag is the html tag - <link />
+    '#attributes' => array( // Set up an array of attributes inside the tag
+      'href' => 'http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic', 
+      'rel' => 'stylesheet',
+      'type' => 'text/css',
+    ),
+  );
+  drupal_add_html_head($element, 'google_font_source_sans_pro');
 }
 function genesis_SUBTHEME_process_html(&$vars) {
 }
@@ -146,4 +156,9 @@ function genesis_p4p_file_link($variables) {
   }
 
   return '<span class="file">' . $icon . ' ' . l($link_text, $url, $options) . '</span>';
+}
+
+/* Theme hook_node() */
+function genesis_p4p_node(&$variables) {
+    // Override variables for node templates here
 }
