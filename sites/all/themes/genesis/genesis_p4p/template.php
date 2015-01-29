@@ -158,7 +158,12 @@ function genesis_p4p_file_link($variables) {
   return '<span class="file">' . $icon . ' ' . l($link_text, $url, $options) . '</span>';
 }
 
-/* Theme hook_node() */
-function genesis_p4p_node(&$variables) {
+/* Theme hook_node_view_alter() */
+function genesis_p4p_process_node(&$variables) {
     // Override variables for node templates here
+    if ($fid = $variables['field_resource_file'][0]['fid']) {
+        if ($file = file_load($fid)) {
+            $variables['resource_path'] = file_create_url($file->uri);
+        }
+    }
 }
