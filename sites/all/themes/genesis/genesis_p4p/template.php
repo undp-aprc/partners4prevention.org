@@ -159,11 +159,11 @@ function genesis_p4p_file_link($variables) {
 }
 
 /* Theme hook_node_view_alter() */
-/*function genesis_p4p_process_node(&$variables) {
-    // Override variables for node templates here
-    if ($fid = $variables['field_resource_file'][0]['fid']) {
+function genesis_p4p_process_node(&$variables) {
+    if (isset($variables['field_resource_file'][0]['fid'])) {
+        $fid = $variables['field_resource_file'][0]['fid'];
         if ($file = file_load($fid)) {
             $variables['resource_path'] = file_create_url($file->uri);
         }
     }
-} */
+}
