@@ -77,7 +77,6 @@
  * @see template_process()
  */
 ?>
-
 <div id="node-<?php print $node->nid; ?>" class="<?php print $classes; ?>"<?php print $attributes; ?>>
   <div class="node-inner clearfix">
 

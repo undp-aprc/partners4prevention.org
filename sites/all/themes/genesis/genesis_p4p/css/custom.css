@@ -740,3 +740,29 @@ a.cboxElement {
     font-weight:bold;
     background-color:#891ba8;
 }
+
+#block-views-Resources-block_1 {
+    padding:10px;
+    border:1px solid #ccc;
+    background-color:#dceaec;
+    text-align:center;
+}
+
+#block-views-Resources-block_1 h2 {
+    font-size:16px;
+    background-color:#7aa136;
+    text-align:center;
+    color:#fff;
+    padding:10px;
+}
+
+.view-display-id-block_1 .views-fields-wrapper {
+    padding-bottom:10px;
+    margin:10px 0;
+    border-bottom:1px dashed #ccc;
+    font-weight:bold;
+}
+
+.view-display-id-block_1 a {
+    color:#666;
+}
