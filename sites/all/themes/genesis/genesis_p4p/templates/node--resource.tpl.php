@@ -104,7 +104,7 @@
         hide($content['links']);
         print render($content);
       ?>
-      <a href="<?php echo $resource_path; ?>" class="feedback-popup">Download Resource</a>
+      <!-- ><a href="<?php // echo $resource_path; ?>" class="feedback-popup">Download Resource</a> ->
     </div>
 
     <?php if ($content['links']): ?>
