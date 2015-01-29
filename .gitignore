@@ -4,3 +4,24 @@ sites/*/settings*.php
 # Ignore paths that contain user-generated content.
 sites/*/files
 sites/*/private
+sites/*/temp
+
+# Ignore core files
+/*.txt
+/archive_site
+authorize.php
+cron.php
+error_log
+/includes/
+index.php
+install.php
+/misc/
+/modules/
+offline.png
+/profiles/
+robots.txt
+/scripts/
+/themes/
+/update.php
+/web.config
+/xmlrpc.php
