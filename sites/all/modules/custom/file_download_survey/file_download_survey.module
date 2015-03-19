@@ -1,0 +1,224 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function file_download_survey_menu() {
+  $items = array();
+
+  $items['admin/config/content/file_download_survey'] = array(
+    'title' => 'File Download Survey',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('file_download_survey_admin'),
+    'access arguments' => array('administer file download survey popup'),
+    'file' => 'includes/file_download_survey.admin.inc',
+  );
+
+  $items['file_download_survey/thankyou'] = array(
+    'title' => t('Thank you'),
+    'page callback' => 'file_download_survey_thank_you',
+    'access arguments' => array('access content'),
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_init().
+ **/
+function file_download_survey_init() {
+  $alias = drupal_get_path_alias();
+  if ($alias === 'resource' || strpos($alias, 'resource/') !== FALSE) {
+    drupal_add_js(drupal_get_path('module', 'file_download_survey') .'/js/jquery.colorbox-min.js', 'file');
+    drupal_add_js(drupal_get_path('module', 'file_download_survey') .'/js/file_download_survey.js', 'file');
+    drupal_add_css(drupal_get_path('module','file_download_survey') .'/css/colorbox.css', 'file');
+    drupal_add_js(array('feedback_form' => array('enabled' => variable_get('file_download_survey_enabled', false))), 'setting');
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function file_download_survey_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id == 'feedback_node_form') {
+    if (empty($form['nid']['#value'])) {
+      $form['actions']['submit']['#value'] = t('Submit');
+      $form['actions']['submit']['#submit'][] = 'file_download_survey_node_form_submit';
+    }
+  }
+}
+
+/**
+ * Feedback node form submit.
+ */
+function file_download_survey_node_form_submit(&$form, &$form_state) {
+  drupal_get_messages();
+  $form_state['redirect'] = 'file_download_survey/thankyou';
+
+  $values = $form_state['values'];
+  $organization = field_get_items('node', (object) $values, 'field_organization');
+  $country = field_get_items('node', (object) $values, 'field_country');
+  $reason = field_get_items('node', (object) $values, 'field_reason');
+
+  $form_data = array(
+    'organization' => $organization[0]['value'],
+    'country' => $country[0]['value'],
+    'reason' => $reason[0]['value'],
+  );
+}
+
+/**
+ * Thank you message.
+ */
+function file_download_survey_thank_you() {
+  return t(variable_get('file_download_survey_message', 'Thank you! Your feedback will help us improve resources we produce.'));
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function file_download_survey_field_formatter_info() {
+  $formatters = array();
+
+  if(module_exists('pdf_reader')) {
+    $formatters['file_download_survey_pdf_reader'] = array(
+        'label' => 'PDF Reader Plugin plus file download link with popup survey',
+        'field types' => array('file'),
+        'settings' => array(
+          'pdf_width' => 600,
+          'pdf_height' => 780,
+          'renderer' => 'google',
+          'download' => FALSE,
+          'colorbox' => FALSE,
+          'colorbox_link_text' => '',
+        )
+    );
+  }
+  $formatters['file_download_survey'] = array(
+    'label' => 'File download link with popup survey',
+    'field types' => array('file'),
+  );
+
+  return $formatters;
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function file_download_survey_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $settings = $display['settings'];
+  $element = array();
+
+  switch ($display['type']) {
+    case 'file_download_survey':
+      foreach ($items as $delta => $item) {
+        kpr($item);
+        $element[$delta] = array(
+          '#theme' => 'file_link',
+          '#file' => (object) $item,
+        );
+      }
+      break;
+    case 'file_download_survey_pdf_reader':
+      foreach ($items as $delta => $item) {
+        $element[$delta]['#type'] = 'markup';
+        $element[$delta]['#markup'] = theme('pdf_reader_popup_survey', array('file' => $item, 'nid' => $entity->nid, 'settings' => $settings));
+      }
+      break;
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function file_download_survey_theme($existing, $type, $theme, $path) {
+  $items = array();
+  $items['pdf_reader_popup_survey'] = array(
+    'variables' => array('file' => NULL, 'nid' => NULL, 'settings' => NULL),
+  );
+  $items['file_download_button'] = array(
+    'variables' => array('file' => NULL, 'nid'=> NULL),
+  );
+  return $items;
+}
+
+function theme_pdf_reader_popup_survey($variables) {
+  kpr($variables);
+  $file = file_load($variables['file']['fid']);
+  $file_url = isset($variables['file']['uri']) ? file_create_url($variables['file']['uri']) : $variables['file']['value'];
+
+  switch ($variables['settings']['renderer']) {
+    case 'google':
+      $output = '<iframe id="pdf_reader" src="//docs.google.com/viewer?embedded=true&url='
+        . urlencode($file_url)
+        . '" width="' . $variables['settings']['pdf_width']
+        . '" height="' . $variables['settings']['pdf_height']
+        . '" scrolling="no'
+        . '" style="border: none;"></iframe>';
+      break;
+
+    case 'direct':
+      $output = '<object id="pdf_reader" data="' . $file_url . '#view=Fit' . '" '
+        . 'type="application/pdf' . '" '
+        . 'width="' . $variables['settings']['pdf_width'] . '" '
+        . 'height="' . $variables['settings']['pdf_height'] . '">'
+        . '<embed src="' . $file_url . '#view=Fit' . '"'
+        . 'width="' . $variables['settings']['pdf_width'] . '" '
+        . 'height="' . $variables['settings']['pdf_height'] . '" '
+        . 'type="application/pdf">'
+        . '<p>' . t('It appears your Web browser is not configured to display PDF files. ')
+        . l(t('Download adobe Acrobat '), 'http://www.adobe.com/products/reader.html')
+        . ' ' . t('or') . ' ' . l(t('click here to download the PDF file.'), $file_url) . '</p>'
+        . '</embed></object>';
+      break;
+
+    case 'pdf-js':
+      _pdf_reader_load_pdf_js($file_url);
+      $output = theme('pdf_js');
+      break;
+  }
+
+  if ($variables['settings']['download'] == TRUE) {
+    $output .= l(t('Click here to download the PDF file.'), $file_url, array('attributes' => array('class' => 'pdf-reader-download-link')));
+  }
+
+  if ($variables['settings']['colorbox'] == TRUE) {
+    $html = $output;
+
+    $options = array(
+      'attributes' => array('class' => array('colorbox-inline', 'show')),
+      'query' => array(
+        'width' => $variables['settings']['pdf_width'],
+        'height' => $variables['settings']['pdf_height'],
+        'inline' => 'true',
+      ),
+      'fragment' => 'pdf_reader',
+    );
+
+    $output = l(t($variables['settings']['colorbox_link_text']), $file_url, $options);
+
+    $output .= '<div style="display:none">' . $html . '</div>';
+  }
+
+  $nid = $variables['nid'];
+  $file_output = array(
+    '#theme' => 'file_download_button',
+    '#file' => (object) $file,
+    '#prefix' => '<p>',
+    '#suffix' => '</p>',
+    '#nid' => $nid,
+  );
+  $output .= render($file_output);
+
+  return $output;
+}
+
+function theme_file_download_button($variables) {
+  $file = $variables['file'];
+  $path = file_create_url($file->uri);
+
+  return "<div class='button survey' data-path='$path' data-nid='{$variables['nid']}'>Download</div>";
+}
+?>

@@ -728,7 +728,7 @@ p.guide {
 	margin: 15px 0;
 }
 
-a.cboxElement {
+/* a.cboxElement {
     border:1px solid #000;
     padding:10px;
     margin-top:20px;
@@ -741,7 +741,7 @@ a.cboxElement {
     background-color:#891ba8;
 }
 
-#block-views-Resources-block_1 {
+/* #block-views-Resources-block_1 {
     padding:10px;
     border:1px solid #ccc;
     background-color:#dceaec;
@@ -754,7 +754,7 @@ a.cboxElement {
     text-align:center;
     color:#fff;
     padding:10px;
-}
+} */
 
 .view-display-id-block_1 .views-fields-wrapper {
     padding-bottom:10px;
@@ -765,4 +765,8 @@ a.cboxElement {
 
 .view-display-id-block_1 a {
     color:#666;
+}
+
+.timeline-header {
+    background-color:#7aa136;
 }

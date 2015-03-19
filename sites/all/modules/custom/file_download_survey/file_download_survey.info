@@ -1,0 +1,11 @@
+name = File Download Survey
+description = Defines a widget to display a popup survey form when a user clicks to download a file
+package = Custom
+core = 7.x
+dependencies[] = file
+dependencies[] = entityreference
+dependencies[] = entityreference_prepopulate
+dependencies[] = email
+dependencies[] = ip
+
+files[] = includes/file_download_survey.admin.inc
