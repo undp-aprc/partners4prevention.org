@@ -112,7 +112,6 @@ function file_download_survey_field_formatter_view($entity_type, $entity, $field
   switch ($display['type']) {
     case 'file_download_survey':
       foreach ($items as $delta => $item) {
-        kpr($item);
         $element[$delta] = array(
           '#theme' => 'file_link',
           '#file' => (object) $item,
@@ -145,7 +144,6 @@ function file_download_survey_theme($existing, $type, $theme, $path) {
 }
 
 function theme_pdf_reader_popup_survey($variables) {
-  kpr($variables);
   $file = file_load($variables['file']['fid']);
   $file_url = isset($variables['file']['uri']) ? file_create_url($variables['file']['uri']) : $variables['file']['value'];
 
